@@ -18,13 +18,19 @@ package iaaseki
 
 import (
 	"context"
-
+	iaasekiv1 "ekiOperator/apis/iaaseki/v1"
+	clientset "ekiOperator/generated/iaaseki/clientset/versioned"
+	ekiinformer "ekiOperator/generated/iaaseki/informers/externalversions"
+	ekisignal "ekiOperator/pkg/signals"
 	"k8s.io/apimachinery/pkg/runtime"
+	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	iaasekiv1 "ekiOperator/apis/iaaseki/v1"
+	"time"
 )
 
 // EkiMonitorReconciler reconciles a EkiMonitor object
@@ -32,6 +38,10 @@ type EkiMonitorReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
+
+//+kubebuilder:rbac:groups=iaaseki.cmss,resources=deployment,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=iaaseki.cmss,resources=service,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=iaaseki.cmss,resources=ingress,verbs=get;list;watch;create;update;patch;delete
 
 //+kubebuilder:rbac:groups=iaaseki.cmss,resources=ekimonitors,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=iaaseki.cmss,resources=ekimonitors/status,verbs=get;update;patch
@@ -48,8 +58,36 @@ type EkiMonitorReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.2/pkg/reconcile
 func (r *EkiMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
 	// TODO(user): your logic here
+	klog.InitFlags(nil)
+	// get config
+	kubeconfig, err := clientcmd.BuildConfigFromFlags("", clientcmd.RecommendedHomeFile)
+	if err != nil {
+		klog.Fatalf("Error building kubeconfig: %s", err.Error())
+	}
+	kubeClient, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		klog.Fatalf("Error building kubernetes client: %s", err.Error())
+	}
+	ekiClient, err := clientset.NewForConfig(kubeconfig)
+	if err != nil {
+		klog.Fatalf("Error building eki client: %s", err.Error())
+	}
+	// generate two informers
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
+	ekiInformerFactory := ekiinformer.NewSharedInformerFactory(ekiClient, time.Second*30)
+
+	controller := NewController(kubeClient, ekiClient,
+		kubeInformerFactory.Apps().V1().Deployments(),
+		ekiInformerFactory.Iaaseki().V1().EkiMonitors())
+
+	stopCh := ekisignal.SetupSignalHandler()
+	kubeInformerFactory.Start(stopCh)
+	ekiInformerFactory.Start(stopCh)
+
+	if err = controller.Run(2, stopCh); err != nil {
+		klog.Fatalf("Error running controller: %s", err.Error())
+	}
 
 	return ctrl.Result{}, nil
 }
