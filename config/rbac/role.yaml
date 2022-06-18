@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - iaaseki.cmss
+  resources:
+  - ekimonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - iaaseki.cmss
+  resources:
+  - ekimonitors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - iaaseki.cmss
+  resources:
+  - ekimonitors/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,6 @@
+apiVersion: iaaseki.cmss/v1
+kind: EkiMonitor
+metadata:
+  name: ekimonitor-sample
+spec:
+  # TODO(user): Add fields here
