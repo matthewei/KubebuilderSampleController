@@ -19,7 +19,7 @@ package iaaseki
 import (
 	"context"
 	iaasekiv1 "ekiOperator/apis/iaaseki/v1"
-	clientset "ekiOperator/generated/iaaseki/clientset/versioned"
+	ekiclientset "ekiOperator/generated/iaaseki/clientset/versioned"
 	ekiinformer "ekiOperator/generated/iaaseki/informers/externalversions"
 	ekisignal "ekiOperator/pkg/signals"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -69,7 +69,7 @@ func (r *EkiMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		klog.Fatalf("Error building kubernetes client: %s", err.Error())
 	}
-	ekiClient, err := clientset.NewForConfig(kubeconfig)
+	ekiClient, err := ekiclientset.NewForConfig(kubeconfig)
 	if err != nil {
 		klog.Fatalf("Error building eki client: %s", err.Error())
 	}
@@ -77,15 +77,17 @@ func (r *EkiMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	ekiInformerFactory := ekiinformer.NewSharedInformerFactory(ekiClient, time.Second*30)
 
-	controller := NewController(kubeClient, ekiClient,
+	ekiController := NewController(kubeClient, ekiClient,
 		kubeInformerFactory.Apps().V1().Deployments(),
+		kubeInformerFactory.Core().V1().Services(),
+		kubeInformerFactory.Networking().V1().Ingresses(),
 		ekiInformerFactory.Iaaseki().V1().EkiMonitors())
 
 	stopCh := ekisignal.SetupSignalHandler()
 	kubeInformerFactory.Start(stopCh)
 	ekiInformerFactory.Start(stopCh)
 
-	if err = controller.Run(2, stopCh); err != nil {
+	if err = ekiController.Run(2, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
 	}
 
