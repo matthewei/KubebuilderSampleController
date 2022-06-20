@@ -3,4 +3,11 @@ kind: EkiMonitor
 metadata:
   name: ekimonitor-sample
 spec:
-  # TODO(user): Add fields here
+  deployment:
+    name: ekimonitor-deployment
+    replicas: 2
+    image: nginx:latest
+  service:
+    name: ekiminitor-service
+  ingress:
+    name: ekimonitor-ingress

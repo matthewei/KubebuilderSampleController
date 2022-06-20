@@ -8,6 +8,18 @@ rules:
 - apiGroups:
   - iaaseki.cmss
   resources:
+  - deployment
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - iaaseki.cmss
+  resources:
   - ekimonitors
   verbs:
   - create
@@ -31,3 +43,27 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - iaaseki.cmss
+  resources:
+  - ingress
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - iaaseki.cmss
+  resources:
+  - service
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

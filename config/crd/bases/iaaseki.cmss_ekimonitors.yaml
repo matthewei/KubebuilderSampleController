@@ -35,10 +35,41 @@ spec:
           spec:
             description: EkiMonitorSpec defines the desired state of EkiMonitor
             properties:
-              foo:
-                description: Foo is an example field of EkiMonitor. Edit ekimonitor_types.go
-                  to remove/update
-                type: string
+              deployment:
+                description: 'EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+                  NOTE: json tags are required.  Any new fields you add must have
+                  json tags for the fields to be serialized.'
+                properties:
+                  image:
+                    type: string
+                  name:
+                    type: string
+                  replicas:
+                    format: int32
+                    type: integer
+                required:
+                - image
+                - name
+                - replicas
+                type: object
+              ingress:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              service:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+            required:
+            - deployment
+            - ingress
+            - service
             type: object
           status:
             description: EkiMonitorStatus defines the observed state of EkiMonitor

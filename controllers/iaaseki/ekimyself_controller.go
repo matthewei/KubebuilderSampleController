@@ -89,7 +89,7 @@ func NewController(
 	// Create event broadcaster
 	// Add app-controller types to the default Kubernetes Scheme so Events can be
 	// logged for app-controller types.
-	utilruntime.Must(ekischeme.AddToScheme(ekischeme.Scheme))
+	utilruntime.Must(ekischeme.AddToScheme(scheme.Scheme))
 	klog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartStructuredLogging(0)
